@@ -1,7 +1,14 @@
 from vyper import compile_code
 from web3 import Web3
+from dotenv import load_dotenv
+import os
 
-MY_ADDRESS = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+"""This project requries that a .env file in the directory with the variable below"""
+
+load_dotenv()
+RPC_URL = os.getenv("RPC_URL")
+MY_ADDRESS = os.getenv("MY_ADDRESS")
+MY_KEY = os.getenv("MY_KEY")
 
 
 def main():
@@ -12,7 +19,7 @@ def main():
             favorites_code, output_formats=["bytecode", "abi"]
         )
 
-    w3 = Web3(Web3.HTTPProvider("http://127.0.0.1:8545"))
+    w3 = Web3(Web3.HTTPProvider(RPC_URL))
     favorites_contract = w3.eth.contract(
         bytecode=compliation_details["bytecode"], abi=compliation_details["abi"]
     )
@@ -20,10 +27,15 @@ def main():
     print("Building the transaction...")
 
     nonce = w3.eth.get_transaction_count(MY_ADDRESS)
+
     transaction = favorites_contract.constructor().build_transaction(
         {"nonce": nonce, "from": MY_ADDRESS, "gasPrice": w3.eth.gas_price}
     )
-    breakpoint()
+    signed_transaction = w3.eth.account.sign_transaction(
+        transaction, private_key=MY_KEY
+    )
+    print(signed_transaction)
+    # breakpoint()
 
 
 if __name__ == "__main__":
